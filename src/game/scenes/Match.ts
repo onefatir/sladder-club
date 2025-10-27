@@ -10,6 +10,7 @@ export class Match extends Scene
     gameText: Phaser.GameObjects.Text;
 
     private boardController!: BoardController;
+    private playerInfoTexts: Phaser.GameObjects.Text[] = [];
 
     constructor ()
     {
@@ -213,12 +214,16 @@ export class Match extends Scene
 
         headerText.setOrigin(0, 0.5);
 
-        // Players list in column format
-        const players = [
-            { key: 'hijau-head', name: 'Player 1', points: 80 },
-            { key: 'biru-head', name: 'Player 2', points: 95 },
-            { key: 'merah-head', name: 'Player 3', points: 72 },
-            { key: 'kuning-head', name: 'Player 4', points: 88 }
+        // Get dynamic player data from board controller
+        const dynamicPlayers = this.boardController ? this.boardController.getPlayers().map(player => ({
+            key: player.sprite.texture.key,
+            name: player.name,
+            points: player.scores
+        })) : [
+            { key: 'hijau-head', name: 'Player 1', points: 0 },
+            { key: 'biru-head', name: 'Player 2', points: 0 },
+            { key: 'merah-head', name: 'Player 3', points: 0 },
+            { key: 'kuning-head', name: 'Player 4', points: 0 }
         ];
 
         const playerImageSize = 40;
@@ -231,8 +236,8 @@ export class Match extends Scene
         const availableWidth = width - (containerPadding * 2) - playerImageSize - imageToTextSpacing;
         const nameWidth = Math.floor(availableWidth * 0.5); // percentage
 
-        for (let i = 0; i < players.length; i++) {
-            const player = players[i];
+        for (let i = 0; i < dynamicPlayers.length; i++) {
+            const player = dynamicPlayers[i];
             const rowY = playerStartY + (i * playerRowHeight);
 
             // Player image - 24px from left edge
@@ -269,6 +274,9 @@ export class Match extends Scene
                 color: '#000000'
             });
             points.setOrigin(0, 0.5);
+
+            // Store reference to points text for updates
+            this.playerInfoTexts[i] = points;
 
             // Add all elements to container
             container.add([playerImage, playerName, colon, points]);
@@ -356,6 +364,9 @@ export class Match extends Scene
             
             // Update UI to show next player's turn
             this.updatePlayerTurnUI(headerText, headerImage, nextPlayerText, nextPlayerImage);
+            
+            // Update player information display with latest scores
+            this.updatePlayerInfoDisplay();
         });
     }
 
@@ -398,6 +409,21 @@ export class Match extends Scene
         const nextPlayerSprite = playerSpriteMap[nextPlayer.name];
         if (nextPlayerSprite) {
             nextPlayerImage.setTexture(nextPlayerSprite);
+        }
+    }
+
+    private updatePlayerInfoDisplay(): void {
+        if (!this.boardController) return;
+
+        const players = this.boardController.getPlayers();
+        
+        for (let i = 0; i < players.length && i < this.playerInfoTexts.length; i++) {
+            const player = players[i];
+            const pointsText = this.playerInfoTexts[i];
+            
+            if (pointsText) {
+                pointsText.setText(`${player.scores} points`);
+            }
         }
     }
 
