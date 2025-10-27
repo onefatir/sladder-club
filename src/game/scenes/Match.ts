@@ -170,7 +170,6 @@ export class Match extends Scene
         container.add([headerImage, headerText, rollTheDiceText, diceImage, nextPlayerText, nextPlayerImage]);
     }
 
-
     createPlayerInfo() {
         const width = 369;
         const height = 338;
