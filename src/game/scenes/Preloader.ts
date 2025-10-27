@@ -57,6 +57,9 @@ export class Preloader extends Scene
 
         // Load sounds
         this.load.audio('dice-sound', 'sounds/dice.mp3');
+        this.load.audio('slot-machine', 'sounds/slot-machine.mp3');
+        this.load.audio('walk-1', 'sounds/walk-1.mp3');
+        this.load.audio('walk-2', 'sounds/walk-2.mp3');
     }
 
     create ()
@@ -82,7 +85,7 @@ export class Preloader extends Scene
         // Create rolling animation data (this will be used programmatically)
         this.registry.set('diceKeys', diceKeys);
         this.registry.set('diceAnimationConfig', {
-            duration: 1000, // 1 second roll
+            duration: 5_000, // 5 second roll
             fadeInDuration: 200, // 0.2 seconds fade in
             fadeOutDuration: 200, // 0.2 seconds fade out
             rollInterval: 100 // Change dice every 100ms during roll

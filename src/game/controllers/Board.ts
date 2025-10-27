@@ -87,19 +87,15 @@ export class BoardController {
         if (!currentPlayer) return;
 
         this.isRolling = true;
-        const config = this.scene.registry.get('diceAnimationConfig') || {
-            duration: 1000,
-            fadeInDuration: 200,
-            fadeOutDuration: 200,
-            rollInterval: 100
-        };
+        this.scene.sound.play('slot-machine');
+
+        const config = this.scene.registry.get('diceAnimationConfig');
 
         // Generate random dice value (1-6)
         const finalValue = Math.floor(Math.random() * 6) + 1;
         // const finalValue = 7
 
         // Play dice sound effect
-        this.scene.sound.play('dice-sound');
 
         // Dice rolling animation
         diceSprite.setAlpha(0);
@@ -112,29 +108,39 @@ export class BoardController {
             onComplete: () => {
                 let rollCount = 0;
                 const maxRolls = config.duration / config.rollInterval;
+                let currentInterval = config.rollInterval;
+                let lastRollTimer: Phaser.Time.TimerEvent | null = null;
                 
-                const rollTimer = this.scene.time.addEvent({
-                    delay: config.rollInterval,
-                    callback: () => {
-                        const randomDice = this.diceKeys[Math.floor(Math.random() * 6)];
-                        diceSprite.setTexture(randomDice);
-                        rollCount++;
+                const updateRoll = () => {
+                    const randomDice = this.diceKeys[Math.floor(Math.random() * 6)];
+                    diceSprite.setTexture(randomDice);
+                    rollCount++;
+
+                    // Calculate remaining rolls
+                    const remainingRolls = maxRolls - rollCount;
+
+                    if (rollCount >= maxRolls) {
+                        if (lastRollTimer) lastRollTimer.remove();
+                        diceSprite.setTexture(`dice-${finalValue}`);
                         
-                        if (rollCount >= maxRolls) {
-                            rollTimer.remove();
-                            diceSprite.setTexture(`dice-${finalValue}`);
-                            
-                            // Move player after showing final dice value
-                            this.scene.time.delayedCall(500, () => {
-                                this.moveCurrentPlayer(finalValue, () => {
-                                    this.isRolling = false;
-                                    if (onRollComplete) onRollComplete(finalValue);
-                                });
+                        // Move player after showing final dice value
+                        this.scene.time.delayedCall(500, () => {
+                            this.moveCurrentPlayer(finalValue, () => {
+                                this.isRolling = false;
+                                if (onRollComplete) onRollComplete(finalValue);
                             });
+                        });
+                    } else {
+                        // Slow down for the last 5 rolls
+                        if (remainingRolls <= 5) {
+                            currentInterval += config.rollInterval * 0.5; // Gradually increase interval
                         }
-                    },
-                    loop: true
-                });
+                        lastRollTimer = this.scene.time.delayedCall(currentInterval, updateRoll);
+                    }
+                };
+                
+                // Start the rolling animation
+                lastRollTimer = this.scene.time.delayedCall(currentInterval, updateRoll);
             }
         });
     }
@@ -142,6 +148,30 @@ export class BoardController {
     /**
  * Move current player by dice value
  */
+private movePlayerSequentially(player: PlayerController, from: number, to: number, onComplete?: () => void): void {
+    const direction = from < to ? 1 : -1;
+    let currentPos = from;
+    let soundToggle = true;
+
+    const moveNext = () => {
+        if (currentPos === to) {
+            if (onComplete) onComplete();
+            return;
+        }
+
+        currentPos += direction;
+        // Play alternating walk sounds
+        this.scene.sound.play(soundToggle ? 'walk-1' : 'walk-2');
+        soundToggle = !soundToggle;
+
+        player.moveToPosition(currentPos, () => {
+            this.scene.time.delayedCall(150, moveNext); // 150ms delay between steps
+        });
+    };
+
+    moveNext();
+}
+
 private moveCurrentPlayer(diceValue: number, onComplete?: () => void): void {
     const currentPlayer = this.getCurrentPlayer();
     if (!currentPlayer) return;
@@ -153,19 +183,19 @@ private moveCurrentPlayer(diceValue: number, onComplete?: () => void): void {
         const overshoot = targetPosition - 100;
         const finalPosition = Math.max(100 - overshoot, 1); // Ensure position doesn't go below 1
         
-        // First move to position 100
-        currentPlayer.moveToPosition(100, () => {
-            // Then bounce back to the final position
+        // Move to 100 square by square
+        this.movePlayerSequentially(currentPlayer, currentPlayer.position, 100, () => {
+            // Then bounce back square by square
             this.scene.time.delayedCall(300, () => { // Small delay to show the bounce
-                currentPlayer.moveToPosition(finalPosition, () => {
+                this.movePlayerSequentially(currentPlayer, 100, finalPosition, () => {
                     // Check for obstacles at final position
                     this.handleObstaclesAtPosition(currentPlayer, finalPosition, onComplete);
                 });
             });
         });
     } else {
-        // Normal movement - move directly to new position
-        currentPlayer.moveToPosition(targetPosition, () => {
+        // Move square by square to target position
+        this.movePlayerSequentially(currentPlayer, currentPlayer.position, targetPosition, () => {
             // Check for win condition (only when exactly at 100)
             if (targetPosition === 100) {
                 this.handlePlayerWin(currentPlayer);
