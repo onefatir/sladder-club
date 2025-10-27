@@ -54,6 +54,9 @@ export class Preloader extends Scene
         this.load.image('dice-4', 'dices/dice-4.png');
         this.load.image('dice-5', 'dices/dice-5.png');
         this.load.image('dice-6', 'dices/dice-6.png');
+
+        // Load sounds
+        this.load.audio('dice-sound', 'sounds/dice.mp3');
     }
 
     create ()
