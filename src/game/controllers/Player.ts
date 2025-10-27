@@ -193,10 +193,39 @@ export class PlayerController {
     }
 
     /**
+     * Move player diagonally to a new position (for ladders and snakes)
+     * @param newPosition Target square (1-100)
+     * @param onComplete Callback when animation completes
+     */
+    public moveToPositionDiagonal(newPosition: number, onComplete?: () => void): void {
+        if (newPosition < 1 || newPosition > 100) {
+            console.error(`Invalid target position: ${newPosition}`);
+            return;
+        }
+
+        const targetPixel = this.squareToPixel(newPosition);
+        
+        // Direct diagonal movement - faster than step-by-step
+        this.scene.tweens.add({
+            targets: this.sprite,
+            x: targetPixel.x,
+            y: targetPixel.y,
+            duration: 800, // Slightly slower than normal step for visual effect
+            ease: 'Power2.easeInOut',
+            onComplete: () => {
+                this.position = newPosition;
+                this.actualPosition = targetPixel;
+                if (onComplete) onComplete();
+            }
+        });
+    }
+
+    /**
      * Update player's score
      */
     public updateScore(points: number): void {
         this.scores += points;
+        console.log(`${this.name} earned ${points} points! Total: ${this.scores}`);
     }
 
     /**
