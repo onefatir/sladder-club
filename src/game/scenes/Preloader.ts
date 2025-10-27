@@ -95,6 +95,7 @@ export class Preloader extends Scene
         this.load.audio('slot-machine', 'sounds/slot-machine.mp3');
         this.load.audio('walk-1', 'sounds/walk-1.mp3');
         this.load.audio('walk-2', 'sounds/walk-2.mp3');
+        this.load.audio('bgm-main-menu', 'sounds/bgm-main-menu.mp3');
     }
 
     create ()
@@ -108,7 +109,7 @@ export class Preloader extends Scene
             //  For example, you can define global animations here, so we can use them in other scenes.
 
             //  Move to the MainMenu. You could also swap this for a Scene Transition, such as a camera fade.
-            this.scene.start('Match');
+            this.scene.start('MainMenu');
         });
     }
 
