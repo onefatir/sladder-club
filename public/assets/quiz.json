@@ -1,0 +1,52 @@
+[
+	{
+		"question": "What month comes after February?",
+		"answers": [
+			{ "text": "January", "isCorrect": false },
+			{ "text": "March", "isCorrect": true },
+			{ "text": "April", "isCorrect": false },
+			{ "text": "May", "isCorrect": false }
+		],
+		"points": 20
+	},
+	{
+		"question": "Which number word matches 5th?",
+		"answers": [
+			{ "text": "First", "isCorrect": false },
+			{ "text": "Second", "isCorrect": false },
+			{ "text": "Fourth", "isCorrect": false },
+			{ "text": "Fifth", "isCorrect": true }
+		],
+		"points": 30
+	},
+	{
+		"question": "What months come before and after August?",
+		"answers": [
+			{ "text": "June and July", "isCorrect": false },
+			{ "text": "September and October", "isCorrect": false },
+			{ "text": "May and June", "isCorrect": false },
+			{ "text": "July and September", "isCorrect": true }
+		],
+		"points": 25
+	},
+	{
+		"question": "Can you tell me the order from morning to night?",
+		"answers": [
+			{ "text": "Night → Afternoon → Morning → Evening", "isCorrect": false },
+			{ "text": "Morning → Afternoon → Evening → Night", "isCorrect": true },
+			{ "text": "Morning → Night → Afternoon → Evening", "isCorrect": false },
+			{ "text": "Morning → Afternoon → Evening → Night", "isCorrect": true }
+		],
+		"points": 15
+	},
+	{
+		"question": "How do you spell 47?",
+		"answers": [
+			{ "text": "Forty-seven", "isCorrect": true },
+			{ "text": "Fourteen-seven", "isCorrect": false },
+			{ "text": "Forty-seventy", "isCorrect": false },
+			{ "text": "Seventy-four", "isCorrect": false }
+		],
+		"points": 20
+	}
+]

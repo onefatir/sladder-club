@@ -23,8 +23,6 @@ export class BoardController {
         // Initialize obstacles and quiz handlers
         this.obstaclesController = new ObstaclesController();
         this.quizHandler = new QuizHandler(scene);
-
-        // this.quizHandler.showQuiz("ladder", () => {});
     }
 
     /**
@@ -127,7 +125,10 @@ export class BoardController {
                         this.scene.time.delayedCall(500, () => {
                             this.moveCurrentPlayer(finalValue, () => {
                                 this.isRolling = false;
-                                if (onRollComplete) onRollComplete(finalValue);
+                                if (onRollComplete) {
+                                    // If player rolls a 6, don't change turns (they get another roll)
+                                    onRollComplete(finalValue, finalValue === 6);
+                                }
                             });
                         });
                     } else {
@@ -146,182 +147,182 @@ export class BoardController {
     }
 
     /**
- * Move current player by dice value
- */
-private movePlayerSequentially(player: PlayerController, from: number, to: number, onComplete?: () => void): void {
-    const direction = from < to ? 1 : -1;
-    let currentPos = from;
-    let soundToggle = true;
+     * Move current player by dice value
+     */
+    private movePlayerSequentially(player: PlayerController, from: number, to: number, onComplete?: () => void): void {
+        const direction = from < to ? 1 : -1;
+        let currentPos = from;
+        let soundToggle = true;
 
-    const moveNext = () => {
-        if (currentPos === to) {
+        const moveNext = () => {
+            if (currentPos === to) {
+                if (onComplete) onComplete();
+                return;
+            }
+
+            currentPos += direction;
+            // Play alternating walk sounds
+            this.scene.sound.play(soundToggle ? 'walk-1' : 'walk-2');
+            soundToggle = !soundToggle;
+
+            player.moveToPosition(currentPos, () => {
+                this.scene.time.delayedCall(150, moveNext); // 150ms delay between steps
+            });
+        };
+
+        moveNext();
+    }
+
+    private moveCurrentPlayer(diceValue: number, onComplete?: () => void): void {
+        const currentPlayer = this.getCurrentPlayer();
+        if (!currentPlayer) return;
+
+        const targetPosition = currentPlayer.position + diceValue;
+        
+        // If target position exceeds 100, implement bounce-back
+        if (targetPosition > 100) {
+            const overshoot = targetPosition - 100;
+            const finalPosition = Math.max(100 - overshoot, 1); // Ensure position doesn't go below 1
+            
+            // Move to 100 square by square
+            this.movePlayerSequentially(currentPlayer, currentPlayer.position, 100, () => {
+                // Then bounce back square by square
+                this.scene.time.delayedCall(300, () => { // Small delay to show the bounce
+                    this.movePlayerSequentially(currentPlayer, 100, finalPosition, () => {
+                        // Check for obstacles at final position
+                        this.handleObstaclesAtPosition(currentPlayer, finalPosition, onComplete);
+                    });
+                });
+            });
+        } else {
+            // Move square by square to target position
+            this.movePlayerSequentially(currentPlayer, currentPlayer.position, targetPosition, () => {
+                // Check for win condition (only when exactly at 100)
+                if (targetPosition === 100) {
+                    this.handlePlayerWin(currentPlayer);
+                    this.updatePlayersPositions();
+                    if (onComplete) onComplete();
+                    return;
+                }
+                
+                // Check for obstacles at target position
+                this.handleObstaclesAtPosition(currentPlayer, targetPosition, onComplete);
+            });
+        }
+    }
+
+    /**
+     * Handle obstacles at a specific position
+     */
+    private handleObstaclesAtPosition(player: PlayerController, position: number, onComplete?: () => void): void {
+        const obstacle = this.obstaclesController.getObstacleAtPosition(position);
+        
+        if (obstacle.type === null) {
+            // No obstacle, just update positions and complete
+            this.updatePlayersPositions();
             if (onComplete) onComplete();
             return;
         }
 
-        currentPos += direction;
-        // Play alternating walk sounds
-        this.scene.sound.play(soundToggle ? 'walk-1' : 'walk-2');
-        soundToggle = !soundToggle;
+        // Handle different types of obstacles
+        switch (obstacle.type) {
+            case 'ladder':
+                this.handleLadderObstacle(player, obstacle.data, onComplete);
+                break;
+            case 'snake':
+                this.handleSnakeObstacle(player, obstacle.data, onComplete);
+                break;
+            case 'quiz':
+                this.handleQuizObstacle(player, position, onComplete);
+                break;
+        }
+    }
 
-        player.moveToPosition(currentPos, () => {
-            this.scene.time.delayedCall(150, moveNext); // 150ms delay between steps
-        });
-    };
-
-    moveNext();
-}
-
-private moveCurrentPlayer(diceValue: number, onComplete?: () => void): void {
-    const currentPlayer = this.getCurrentPlayer();
-    if (!currentPlayer) return;
-
-    const targetPosition = currentPlayer.position + diceValue;
-    
-    // If target position exceeds 100, implement bounce-back
-    if (targetPosition > 100) {
-        const overshoot = targetPosition - 100;
-        const finalPosition = Math.max(100 - overshoot, 1); // Ensure position doesn't go below 1
-        
-        // Move to 100 square by square
-        this.movePlayerSequentially(currentPlayer, currentPlayer.position, 100, () => {
-            // Then bounce back square by square
-            this.scene.time.delayedCall(300, () => { // Small delay to show the bounce
-                this.movePlayerSequentially(currentPlayer, 100, finalPosition, () => {
-                    // Check for obstacles at final position
-                    this.handleObstaclesAtPosition(currentPlayer, finalPosition, onComplete);
-                });
-            });
-        });
-    } else {
-        // Move square by square to target position
-        this.movePlayerSequentially(currentPlayer, currentPlayer.position, targetPosition, () => {
-            // Check for win condition (only when exactly at 100)
-            if (targetPosition === 100) {
-                this.handlePlayerWin(currentPlayer);
-                this.updatePlayersPositions();
-                if (onComplete) onComplete();
-                return;
+    /**
+     * Handle ladder obstacle
+     */
+    private handleLadderObstacle(player: PlayerController, ladderData: any, onComplete?: () => void): void {
+        this.quizHandler.showQuiz('ladder', (correct: boolean, quizPoints: number) => {
+            const effect = this.obstaclesController.handleLadder(ladderData, correct);
+            
+            // Award quiz points
+            if (quizPoints > 0) {
+                player.updateScore(quizPoints);
             }
             
-            // Check for obstacles at target position
-            this.handleObstaclesAtPosition(currentPlayer, targetPosition, onComplete);
+            // Award ladder effect points
+            if (effect.points > 0) {
+                player.updateScore(effect.points);
+            }
+            
+            // Move player to new position if needed
+            if (effect.newPosition && effect.newPosition !== player.position) {
+                console.log(`${player.name} ${correct ? 'climbed the ladder' : 'stayed at the bottom'}!`);
+                player.moveToPositionDiagonal(effect.newPosition, () => {
+                    this.updatePlayersPositions();
+                    if (onComplete) onComplete();
+                });
+            } else {
+                this.updatePlayersPositions();
+                if (onComplete) onComplete();
+            }
         });
     }
-}
 
-/**
- * Handle obstacles at a specific position
- */
-private handleObstaclesAtPosition(player: PlayerController, position: number, onComplete?: () => void): void {
-    const obstacle = this.obstaclesController.getObstacleAtPosition(position);
-    
-    if (obstacle.type === null) {
-        // No obstacle, just update positions and complete
-        this.updatePlayersPositions();
-        if (onComplete) onComplete();
-        return;
-    }
-
-    // Handle different types of obstacles
-    switch (obstacle.type) {
-        case 'ladder':
-            this.handleLadderObstacle(player, obstacle.data, onComplete);
-            break;
-        case 'snake':
-            this.handleSnakeObstacle(player, obstacle.data, onComplete);
-            break;
-        case 'quiz':
-            this.handleQuizObstacle(player, position, onComplete);
-            break;
-    }
-}
-
-/**
- * Handle ladder obstacle
- */
-private handleLadderObstacle(player: PlayerController, ladderData: any, onComplete?: () => void): void {
-    this.quizHandler.showQuiz('ladder', (correct: boolean, quizPoints: number) => {
-        const effect = this.obstaclesController.handleLadder(ladderData, correct);
-        
-        // Award quiz points
-        if (quizPoints > 0) {
-            player.updateScore(quizPoints);
-        }
-        
-        // Award ladder effect points
-        if (effect.points > 0) {
-            player.updateScore(effect.points);
-        }
-        
-        // Move player to new position if needed
-        if (effect.newPosition && effect.newPosition !== player.position) {
-            console.log(`${player.name} ${correct ? 'climbed the ladder' : 'stayed at the bottom'}!`);
-            player.moveToPositionDiagonal(effect.newPosition, () => {
+    /**
+     * Handle snake obstacle
+     */
+    private handleSnakeObstacle(player: PlayerController, snakeData: any, onComplete?: () => void): void {
+        this.quizHandler.showQuiz('snake', (correct: boolean, quizPoints: number) => {
+            const effect = this.obstaclesController.handleSnake(snakeData, correct);
+            
+            // Award quiz points
+            if (quizPoints > 0) {
+                player.updateScore(quizPoints);
+            }
+            
+            // Award snake effect points
+            if (effect.points > 0) {
+                player.updateScore(effect.points);
+            }
+            
+            // Move player to new position if needed
+            if (effect.newPosition && effect.newPosition !== player.position) {
+                console.log(`${player.name} ${correct ? 'avoided the snake' : 'fell down the snake'}!`);
+                player.moveToPositionDiagonal(effect.newPosition, () => {
+                    this.updatePlayersPositions();
+                    if (onComplete) onComplete();
+                });
+            } else {
                 this.updatePlayersPositions();
                 if (onComplete) onComplete();
-            });
-        } else {
+            }
+        });
+    }
+
+    /**
+     * Handle quiz box obstacle
+     */
+    private handleQuizObstacle(player: PlayerController, position: number, onComplete?: () => void): void {
+        this.quizHandler.showQuiz('quiz', (correct: boolean, quizPoints: number) => {
+            const effect = this.obstaclesController.handleQuizBox(correct, position);
+            
+            // Award quiz points
+            if (quizPoints > 0) {
+                player.updateScore(quizPoints);
+            }
+            
+            // Award quiz box effect points
+            if (effect.points > 0) {
+                player.updateScore(effect.points);
+            }
+            
+            console.log(`${player.name} ${correct ? 'answered correctly' : 'answered incorrectly'} in the quiz box!`);
+            
             this.updatePlayersPositions();
             if (onComplete) onComplete();
-        }
-    });
-}
-
-/**
- * Handle snake obstacle
- */
-private handleSnakeObstacle(player: PlayerController, snakeData: any, onComplete?: () => void): void {
-    this.quizHandler.showQuiz('snake', (correct: boolean, quizPoints: number) => {
-        const effect = this.obstaclesController.handleSnake(snakeData, correct);
-        
-        // Award quiz points
-        if (quizPoints > 0) {
-            player.updateScore(quizPoints);
-        }
-        
-        // Award snake effect points
-        if (effect.points > 0) {
-            player.updateScore(effect.points);
-        }
-        
-        // Move player to new position if needed
-        if (effect.newPosition && effect.newPosition !== player.position) {
-            console.log(`${player.name} ${correct ? 'avoided the snake' : 'fell down the snake'}!`);
-            player.moveToPositionDiagonal(effect.newPosition, () => {
-                this.updatePlayersPositions();
-                if (onComplete) onComplete();
-            });
-        } else {
-            this.updatePlayersPositions();
-            if (onComplete) onComplete();
-        }
-    });
-}
-
-/**
- * Handle quiz box obstacle
- */
-private handleQuizObstacle(player: PlayerController, position: number, onComplete?: () => void): void {
-    this.quizHandler.showQuiz('quiz', (correct: boolean, quizPoints: number) => {
-        const effect = this.obstaclesController.handleQuizBox(correct, position);
-        
-        // Award quiz points
-        if (quizPoints > 0) {
-            player.updateScore(quizPoints);
-        }
-        
-        // Award quiz box effect points
-        if (effect.points > 0) {
-            player.updateScore(effect.points);
-        }
-        
-        console.log(`${player.name} ${correct ? 'answered correctly' : 'answered incorrectly'} in the quiz box!`);
-        
-        this.updatePlayersPositions();
-        if (onComplete) onComplete();
-    });
-}
+        });
+    }
 
     /**
      * Handle player winning the game

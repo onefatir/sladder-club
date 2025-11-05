@@ -16,149 +16,17 @@ export class QuizHandler {
         this.scene = scene;
     }
 
-    private getRandomQuiz(type: 'ladder' | 'snake' | 'quiz'): QuizQuestion {
-        const quizzes: { [key: string]: QuizQuestion[] } = {
-            ladder: [
-                { question: "Are you ready to climb up?", answers: [{
-                    text: "Lorem ipsum dolor sit amet",
-                    isCorrect: false
-                }, {
-                    text: "Consectetur adipiscing elit",
-                    isCorrect: true
-                }, {
-                    text: "Sed do eiusmod tempor",
-                    isCorrect: false
-                }, {
-                    text: "Incididunt ut labore et dolore",
-                    isCorrect: false
-                }], points: 20 },
-                { 
-                    question: "Do you want to take the ladder?", 
-                    answers: [
-                        { text: "Yes, it will help me advance", isCorrect: true },
-                        { text: "No, it looks risky", isCorrect: false },
-                        { text: "I prefer staying here", isCorrect: false },
-                        { text: "I'll find another way", isCorrect: false }
-                    ],
-                    points: 15 
-                },
-                { 
-                    question: "Is climbing a ladder safe?",
-                    answers: [
-                        { text: "Yes, if used properly", isCorrect: true },
-                        { text: "Never safe at all", isCorrect: false },
-                        { text: "Only for experts", isCorrect: false },
-                        { text: "Depends on luck", isCorrect: false }
-                    ],
-                    points: 25 
-                },
-                { 
-                    question: "Should you avoid ladders?",
-                    answers: [
-                        { text: "Always avoid them", isCorrect: false },
-                        { text: "Use them wisely", isCorrect: true },
-                        { text: "Ignore them completely", isCorrect: false },
-                        { text: "Fear them always", isCorrect: false }
-                    ],
-                    points: 18 
-                }
-            ],
-            snake: [
-                { 
-                    question: "Are snakes dangerous?",
-                    answers: [
-                        { text: "All snakes are safe", isCorrect: false },
-                        { text: "Some can be dangerous", isCorrect: true },
-                        { text: "They're just ropes", isCorrect: false },
-                        { text: "Never dangerous", isCorrect: false }
-                    ],
-                    points: 10 
-                },
-                { 
-                    question: "Should you stay away from snakes?",
-                    answers: [
-                        { text: "Keep a safe distance", isCorrect: true },
-                        { text: "Try to pet them", isCorrect: false },
-                        { text: "Play with them", isCorrect: false },
-                        { text: "Feed them treats", isCorrect: false }
-                    ],
-                    points: 12 
-                },
-                { 
-                    question: "Are all snakes friendly?",
-                    answers: [
-                        { text: "Yes, always", isCorrect: false },
-                        { text: "No, be cautious", isCorrect: true },
-                        { text: "They're all pets", isCorrect: false },
-                        { text: "Only if you feed them", isCorrect: false }
-                    ],
-                    points: 15 
-                },
-                { 
-                    question: "Can snakes help you climb?",
-                    answers: [
-                        { text: "Yes, they're helpful", isCorrect: false },
-                        { text: "No, that's not safe", isCorrect: true },
-                        { text: "Only trained snakes", isCorrect: false },
-                        { text: "If they're friendly", isCorrect: false }
-                    ],
-                    points: 8 
-                }
-            ],
-            quiz: [
-                { 
-                    question: "Is learning fun?",
-                    answers: [
-                        { text: "Yes, it's an adventure", isCorrect: true },
-                        { text: "No, it's boring", isCorrect: false },
-                        { text: "Only when forced", isCorrect: false },
-                        { text: "Sometimes maybe", isCorrect: false }
-                    ],
-                    points: 30 
-                },
-                { 
-                    question: "Do you enjoy games?",
-                    answers: [
-                        { text: "Yes, they're fun", isCorrect: true },
-                        { text: "No, waste of time", isCorrect: false },
-                        { text: "Only when winning", isCorrect: false },
-                        { text: "Prefer working", isCorrect: false }
-                    ],
-                    points: 25 
-                },
-                { 
-                    question: "Are quizzes boring?",
-                    answers: [
-                        { text: "Always boring", isCorrect: false },
-                        { text: "No, they're engaging", isCorrect: true },
-                        { text: "Yes, no fun", isCorrect: false },
-                        { text: "Pure torture", isCorrect: false }
-                    ],
-                    points: 20 
-                },
-                { 
-                    question: "Should you give up easily?",
-                    answers: [
-                        { text: "Yes, why try", isCorrect: false },
-                        { text: "Never give up", isCorrect: true },
-                        { text: "When it's hard", isCorrect: false },
-                        { text: "If others do", isCorrect: false }
-                    ],
-                    points: 35 
-                }
-            ]
-        };
-
-        const typeQuizzes = quizzes[type];
-        const randomIndex = Math.floor(Math.random() * typeQuizzes.length);
-        return typeQuizzes[randomIndex];
+    private getRandomQuiz(): QuizQuestion {
+        const quizzes: QuizQuestion[] = this.scene.cache.json.get("quiz-data");
+        const randomIndex = Math.floor(Math.random() * quizzes.length);
+        return quizzes[randomIndex];
     }
 
     public showQuiz(type: 'ladder' | 'snake' | 'quiz', onResult: (correct: boolean, points: number) => void): void {
         if (this.isShowingQuiz) return;
 
         this.isShowingQuiz = true;
-        const quiz = this.getRandomQuiz(type);
+        const quiz = this.getRandomQuiz();
 
         const width = 1920;  // Default game width
         const height = 1080; // Default game height
@@ -357,4 +225,5 @@ export class QuizHandler {
     public isActive(): boolean {
         return this.isShowingQuiz;
     }
+
 }

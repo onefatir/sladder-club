@@ -23,13 +23,6 @@ export class Preloader extends Scene
             color: '#000000'
         }).setOrigin(0.5);
 
-        // Add title text
-        const titleText = this.add.text(centerX, centerY + 50, 'Sladder Club', {
-            fontFamily: '"Pixelify Sans"',
-            fontSize: '48px',
-            color: '#000000'
-        }).setOrigin(0.5);
-
         // Create loading bar background
         const barWidth = 400;
         const barHeight = 20;
@@ -96,6 +89,8 @@ export class Preloader extends Scene
         this.load.audio('walk-1', 'sounds/walk-1.mp3');
         this.load.audio('walk-2', 'sounds/walk-2.mp3');
         this.load.audio('bgm-main-menu', 'sounds/bgm-main-menu.mp3');
+
+        this.load.json('quiz-data', 'quiz.json');
     }
 
     create ()
