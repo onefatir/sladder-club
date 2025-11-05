@@ -75,24 +75,23 @@ export class QuizHandler {
             fontFamily: '"Pixelify Sans"',
             fontSize: '28px',
             color: '#000000',
-            align: 'center',
-            wordWrap: { width: 520 }
+            align: 'left',
+            wordWrap: { width: modalWidth - 76 }
         });
 
         questionText.setOrigin(0);
 
-
-        const answers = ["Lorem ipsum dolor sit amet", "Consectetur adipiscing elit", "Sed do eiusmod tempor", "Incididunt ut labore et dolore"];
         let answerElements = [];
 
-        for (let i = 0; i < answers.length; i++) {
-            const answerText = this.scene.add.text(-modalWidth / 2 + 38, questionText.y + 40 + i * 40, `${String.fromCharCode(97 + i)}. ${answers[i]}`, {
+        for (let i = 0; i < quiz.answers.length; i++) {
+            const answerText = this.scene.add.text(-modalWidth / 2 + 38, questionText.y + 40 + i * 40, `${String.fromCharCode(97 + i)}. ${quiz.answers[i].text}`, {
                 fontFamily: '"Pixelify Sans"',
                 fontSize: '24px',
                 color: '#000000',
                 align: 'left',
-                wordWrap: { width: 520 }
+                wordWrap: { width: modalWidth - 76 }
             });
+
             answerText.setOrigin(0);
             answerElements.push(answerText);
         }
@@ -214,7 +213,7 @@ export class QuizHandler {
         this.scene.time.delayedCall(2000, onComplete);
     }
 
-    private closeModal(): void {
+    public closeModal(): void {
         if (this.modal) {
             this.modal.destroy();
             this.modal = null;
@@ -225,5 +224,4 @@ export class QuizHandler {
     public isActive(): boolean {
         return this.isShowingQuiz;
     }
-
 }

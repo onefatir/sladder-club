@@ -355,14 +355,18 @@ export class Match extends Scene
         if (!currentPlayer || !nextPlayer) return;
 
         // Roll dice with animation and player movement
-        this.boardController.rollDice(diceImage, (diceValue: number) => {
+        this.boardController.rollDice(diceImage, (diceValue: number, canRollAgain: boolean) => {
             console.log(`${currentPlayer.name} rolled ${diceValue}!`);
             
-            // Switch to next player's turn
-            this.boardController.nextTurn();
-            
-            // Update UI to show next player's turn
-            this.updatePlayerTurnUI(headerText, headerImage, nextPlayerText, nextPlayerImage);
+            if (!canRollAgain) {
+                // Switch to next player's turn if not rolling again
+                this.boardController.nextTurn();
+                
+                // Update UI to show next player's turn
+                this.updatePlayerTurnUI(headerText, headerImage, nextPlayerText, nextPlayerImage);
+            } else {
+                console.log(`${currentPlayer.name} gets another turn for rolling a 6!`);
+            }
             
             // Update player information display with latest scores
             this.updatePlayerInfoDisplay();

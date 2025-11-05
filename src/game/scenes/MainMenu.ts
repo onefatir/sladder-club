@@ -150,7 +150,8 @@ export class MainMenu extends Scene {
             '2. If you land on a ladder, answer quiz and climb up!',
             '3. If you land on a snake head, answer quiz to avoid sliding down!',
             '4. If you land on a quiz box, answer quiz to earn bonus points!',
-            '5. First player to reach 100 wins!'
+            '5. Rolls 6 dice to get extra roll!',
+            '6. First player to reach 100 wins!'
         ];
 
         const instructionsText = this.add.text(

@@ -1,9 +1,11 @@
 import { PlayerController } from './Player';
 import { ObstaclesController } from './ObstaclesController';
 import { QuizHandler } from './QuizHandler';
+import { GameModal } from './GameModal';
 
 export class BoardController {
     private players: PlayerController[] = [];
+    private finishedPlayers: PlayerController[] = [];
     private currentPlayerIndex: number = 0;
     private boardSize: number = 1000;
     private boardX: number;
@@ -12,6 +14,7 @@ export class BoardController {
     private isRolling: boolean = false;
     private obstaclesController: ObstaclesController;
     private quizHandler: QuizHandler;
+    private gameModal: GameModal;
 
     constructor(private scene: Phaser.Scene, boardX: number, boardY: number) {
         this.boardX = boardX;
@@ -20,9 +23,10 @@ export class BoardController {
         // Get dice configuration from registry (set in Preloader)
         this.diceKeys = scene.registry.get('diceKeys') || ['dice-1', 'dice-2', 'dice-3', 'dice-4', 'dice-5', 'dice-6'];
         
-        // Initialize obstacles and quiz handlers
+        // Initialize obstacles, quiz handlers, and game modal
         this.obstaclesController = new ObstaclesController();
         this.quizHandler = new QuizHandler(scene);
+        this.gameModal = new GameModal(scene);
     }
 
     /**
@@ -78,7 +82,7 @@ export class BoardController {
     /**
      * Roll dice with animation and move current player
      */
-    public rollDice(diceSprite: Phaser.GameObjects.Image, onRollComplete?: (diceValue: number) => void): void {
+    public rollDice(diceSprite: Phaser.GameObjects.Image, onRollComplete?: (diceValue: number, canRollAgain: boolean) => void): void {
         if (this.isRolling) return;
         
         const currentPlayer = this.getCurrentPlayer();
@@ -91,11 +95,9 @@ export class BoardController {
 
         // Generate random dice value (1-6)
         const finalValue = Math.floor(Math.random() * 6) + 1;
-        // const finalValue = 7
+        // const finalValue = 100;
 
-        // Play dice sound effect
-
-        // Dice rolling animation
+        // Play dice sound effect        // Dice rolling animation
         diceSprite.setAlpha(0);
         
         // Fade in
@@ -328,14 +330,28 @@ export class BoardController {
      * Handle player winning the game
      */
     private handlePlayerWin(player: PlayerController): void {
-        console.log(`🎉 ${player.name} wins the game!`);
-        player.updateScore(100); // Bonus points for winning
-        
-        // Emit win event or handle win logic here
-        // You can add celebration animation, sound effects, etc.
-    }
+        console.log(`🎉 ${player.name} finished the game!`);
+        player.updateScore(100); // Bonus points for finishing
 
-    /**
+        // Add player to finished players list if not already there
+        if (!this.finishedPlayers.includes(player)) {
+            this.finishedPlayers.push(player);
+        }
+
+        // Check if all players have finished
+        if (this.finishedPlayers.length === this.players.length) {
+            // Sort players by points for final ranking
+            const pointRanking = [...this.players].sort((a, b) => b.scores - a.scores);
+            
+            // Show final game results modal
+            this.gameModal.showGameFinished(this.finishedPlayers, pointRanking, () => {
+                this.scene.scene.start('MainMenu');
+            });
+        } else {
+            // Show individual finish modal for this player
+            this.gameModal.showPlayerFinished(player, this.finishedPlayers.length);
+        }
+    }    /**
      * Update all players' positions to handle overlapping
      */
     public updatePlayersPositions(): void {
@@ -371,6 +387,7 @@ export class BoardController {
     public resetGame(): void {
         this.currentPlayerIndex = 0;
         this.isRolling = false;
+        this.finishedPlayers = [];
         
         this.players.forEach(player => {
             player.position = 1;
@@ -408,5 +425,6 @@ export class BoardController {
     public destroy(): void {
         this.players.forEach(player => player.destroy());
         this.players = [];
+        this.gameModal.closeModal();
     }
 }
