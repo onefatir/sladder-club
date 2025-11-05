@@ -91,14 +91,14 @@ export class GameModal {
         }).setOrigin(0.5);
 
         // Finish order
-        const finishOrderTitle = this.scene.add.text(0, -height/4, 'Finish Order:', {
+        const finishOrderTitle = this.scene.add.text(0, -height/3, 'Finish Order:', {
             fontFamily: '"Pixelify Sans"',
             fontSize: '28px',
             color: '#000000',
             align: 'center'
         }).setOrigin(0.5);
 
-        const finishOrderText = this.scene.add.text(0, -height/4 + 50, 
+        const finishOrderText = this.scene.add.text(0, -height/3 + 70, 
             finishedPlayers.map((p, i) => `${i + 1}. ${p.name}`).join('\n'), {
             fontFamily: '"Pixelify Sans"',
             fontSize: '24px',
@@ -107,14 +107,14 @@ export class GameModal {
         }).setOrigin(0.5);
 
         // Points ranking
-        const pointsTitle = this.scene.add.text(0, height/6, 'Points Ranking:', {
+        const pointsTitle = this.scene.add.text(0, 0, 'Points Ranking:', {
             fontFamily: '"Pixelify Sans"',
             fontSize: '28px',
             color: '#000000',
             align: 'center'
         }).setOrigin(0.5);
 
-        const pointsText = this.scene.add.text(0, height/6 + 50,
+        const pointsText = this.scene.add.text(0, 70,
             pointRanking.map((p, i) => `${i + 1}. ${p.name} (${p.scores} points)`).join('\n'), {
             fontFamily: '"Pixelify Sans"',
             fontSize: '24px',

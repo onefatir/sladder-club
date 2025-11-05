@@ -7,7 +7,6 @@ export class BoardController {
     private players: PlayerController[] = [];
     private finishedPlayers: PlayerController[] = [];
     private currentPlayerIndex: number = 0;
-    private boardSize: number = 1000;
     private boardX: number;
     private boardY: number;
     private diceKeys: string[];
