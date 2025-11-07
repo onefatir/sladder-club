@@ -112,7 +112,7 @@ export class MainMenu extends Scene {
         }
 
         const modalWidth = 600;
-        const modalHeight = 500;
+        const modalHeight = 600;
         const padding = 20;
 
         // Create modal container
