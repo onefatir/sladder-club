@@ -94,7 +94,9 @@ export class BoardController {
 
         // Generate random dice value (1-6)
         const finalValue = Math.floor(Math.random() * 6) + 1;
-        // const finalValue = 100;
+        // const finalValue = 59; // snake test
+        // const finalValue = 7; // ladder test
+        // const finalValue = 23; // quiz test
 
         // Play dice sound effect        // Dice rolling animation
         diceSprite.setAlpha(0);

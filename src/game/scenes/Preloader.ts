@@ -82,7 +82,9 @@ export class Preloader extends Scene
         this.load.image('dice-4', 'dices/dice-4.png');
         this.load.image('dice-5', 'dices/dice-5.png');
         this.load.image('dice-6', 'dices/dice-6.png');
+        this.load.image('dice-7', 'dices/dice-6.png');
         this.load.image('dice-99', 'dices/dice-100.png');
+        this.load.image('dice-59', 'dices/dice-100.png');
 
         // Load sounds
         this.load.audio('dice-sound', 'sounds/dice.mp3');
@@ -92,6 +94,33 @@ export class Preloader extends Scene
         this.load.audio('bgm-main-menu', 'sounds/bgm-main-menu.mp3');
 
         this.load.json('quiz-data', 'quiz.json');
+
+        // Create a flag to track quiz audio loading
+        let quizAudioLoaded = false;
+
+        // First load completion - load quiz audio files
+        this.load.on('complete', () => {
+            if (!quizAudioLoaded) {
+                const quizData = this.cache.json.get('quiz-data') || [];
+                
+                // Start a new load operation for quiz audio
+                this.load.once('complete', () => {
+                    quizAudioLoaded = true;
+                    console.log('Quiz audio files loaded successfully');
+                });
+
+                // Load all quiz audio files
+                for (const quiz of quizData) {
+                    if (quiz.audio) {
+                        console.log('Loading quiz audio:', quiz.audio);
+                        this.load.audio(quiz.audio, `sounds/quizzes/${quiz.audio}`);
+                    }
+                }
+
+                // Start loading the audio files
+                this.load.start();
+            }
+        });
     }
 
     create ()
